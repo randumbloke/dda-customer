@@ -23,6 +23,7 @@ def job_labels(cfg: RuntimeConfig, step: str) -> dict[str, str]:
 @dataclass
 class RunResult:
     steps: list[str] = field(default_factory=list)
+    skipped_steps: dict[str, str] = field(default_factory=dict)
     scans: dict[str, str] = field(default_factory=dict)
 
     @property
@@ -82,7 +83,14 @@ def run_stage(
     values = cfg.template_vars()
     for step in steps.for_stage(stage):
         sql = render_file(home, step.sql, values)
-        sql_runner(cfg, step.name, sql, bq_client)
+        try:
+            sql_runner(cfg, step.name, sql, bq_client)
+        except Exception as exc:  # noqa: BLE001 - optional steps report any failure and continue
+            if not step.optional:
+                raise
+            log.error("optional step %s failed: %s", step.name, exc)
+            result.skipped_steps[step.name] = str(exc)
+            continue
         result.steps.append(step.name)
     if cfg.scans:
         if scan_client is None:

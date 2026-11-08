@@ -23,6 +23,9 @@ class Step:
     name: str
     stage: str
     sql: str
+    # An optional step may fail without failing the run, for example a step that reads another
+    # domain's product before access to it has been approved (AT-23).
+    optional: bool = False
 
 
 @dataclass(frozen=True)
@@ -44,7 +47,10 @@ class Steps:
 def load_steps(home: Path | None = None) -> Steps:
     home = home or pipeline_home()
     doc = yaml.safe_load((home / "steps.yaml").read_text(encoding="utf-8"))
-    steps = [Step(name=s["name"], stage=s["stage"], sql=s["sql"]) for s in doc.get("steps", [])]
+    steps = [
+        Step(name=s["name"], stage=s["stage"], sql=s["sql"], optional=bool(s.get("optional", False)))
+        for s in doc.get("steps", [])
+    ]
     for s in steps:
         if s.stage not in ("ingest", "build"):
             raise ValueError(f"step {s.name}: stage must be ingest or build, not {s.stage!r}")

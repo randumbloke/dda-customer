@@ -116,3 +116,26 @@ def test_runtime_from_env():
     assert cfg.scans == ["s1", "s2"] and cfg.template_vars()["consumed_x"] == "a.b.c"
     with pytest.raises(KeyError):
         RuntimeConfig.from_env({})
+
+
+def test_optional_step_failure_does_not_stop_run(home, runtime, tmp_path):
+    import shutil
+
+    from dda_pipeline.config import load_steps as _load
+
+    shutil.copytree(home / "sql", tmp_path / "sql")
+    (tmp_path / "steps.yaml").write_text(
+        "steps:\n"
+        "  - {name: a, stage: ingest, sql: sql/" + _load(home).steps[0].sql.split("/", 1)[1] + ", optional: true}\n"
+        "  - {name: b, stage: ingest, sql: sql/" + _load(home).steps[0].sql.split("/", 1)[1] + "}\n"
+    )
+    ran = []
+
+    def sql_runner(cfg, name, sql, client):
+        if name == "a":
+            raise RuntimeError("Access Denied")
+        ran.append(name)
+
+    result = run_stage(runtime, _load(tmp_path), "ingest", tmp_path, bq_client=object(), scan_client=object(),
+                       sql_runner=sql_runner, scan_runner=lambda n, c: "SUCCEEDED")
+    assert ran == ["b"] and "a" in result.skipped_steps and result.ok
