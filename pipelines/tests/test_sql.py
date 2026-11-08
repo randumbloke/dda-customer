@@ -139,3 +139,14 @@ def test_optional_step_failure_does_not_stop_run(home, runtime, tmp_path):
     result = run_stage(runtime, _load(tmp_path), "ingest", tmp_path, bq_client=object(), scan_client=object(),
                        sql_runner=sql_runner, scan_runner=lambda n, c: "SUCCEEDED")
     assert ran == ["b"] and "a" in result.skipped_steps and result.ok
+
+
+def test_consumed_products_are_read_by_optional_steps(home):
+    # AT-23: a step that reads another domain's product runs before access may be approved, so it
+    # must be optional; every consumed product is read by some step.
+    consumes = yaml.safe_load((home / "config.yaml").read_text()).get("consumes") or {}
+    steps = load_steps(home).steps
+    for key in consumes:
+        readers = [s for s in steps if "${consumed_" + key + "}" in (home / s.sql).read_text()]
+        assert readers, f"no step reads consumed product {key}"
+        assert all(s.optional for s in readers)
