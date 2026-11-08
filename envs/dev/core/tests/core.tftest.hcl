@@ -237,3 +237,48 @@ run "pipeline_enabled" {
     error_message = "consumed tables resolve to project.dataset.table"
   }
 }
+
+# Mocked apply: the published files carry every key their contract schema requires.
+run "published_files_match_contracts" {
+  command = apply
+
+  # The binding module calls the Data Domains API from local-exec; never run it in tests.
+  override_module {
+    target  = module.binding
+    outputs = { binding_names = {} }
+  }
+
+  assert {
+    condition = alltrue([for id, o in google_storage_bucket_object.published_product :
+      length(setsubtract(jsondecode(file("../../../schemas/published_product.schema.json")).required, keys(jsondecode(o.content)))) == 0
+      && length(setsubtract(keys(jsondecode(o.content)), keys(jsondecode(file("../../../schemas/published_product.schema.json")).properties))) == 0
+    ])
+    error_message = "published product definitions match published_product.schema.json keys"
+  }
+  assert {
+    condition = alltrue([for id, o in google_storage_bucket_object.published_product :
+      o.name == "products/dev/${var.business}-dev/${id}.json" && jsondecode(o.content).domain == "${var.business}-dev"
+    ])
+    error_message = "published product path and domain"
+  }
+  assert {
+    condition     = length(setsubtract(jsondecode(file("../../../schemas/outputs_domain.schema.json")).required, keys(jsondecode(google_storage_bucket_object.outputs.content)))) == 0
+    error_message = "outputs.json matches outputs_domain.schema.json keys"
+  }
+  assert {
+    condition = alltrue([for id, p in jsondecode(google_storage_bucket_object.outputs.content).products :
+      length(setsubtract(["name", "project_id", "location", "dataplex_entry"], keys(p))) == 0
+    ])
+    error_message = "outputs.json products carry name, project_id, location, dataplex_entry"
+  }
+  assert {
+    condition = alltrue([for k, b in jsondecode(google_storage_bucket_object.bindings.content).bindings :
+      can(regex("^(ds|dp)-[a-z0-9-]+$", k)) && startswith(b.resource, "//") && b.domain_name != ""
+    ])
+    error_message = "bindings.json matches bindings.schema.json"
+  }
+  assert {
+    condition     = length(jsondecode(google_storage_bucket_object.bindings.content).bindings) == length(local.datasets) + length(local.products)
+    error_message = "one binding per dataset and product (AT-05)"
+  }
+}
