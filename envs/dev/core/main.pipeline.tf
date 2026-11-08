@@ -52,7 +52,7 @@ data "google_storage_bucket_object_content" "consumed_product" {
 
   lifecycle {
     postcondition {
-      condition     = self.content != null && trimspace(coalesce(self.content, "")) != ""
+      condition     = trimspace(self.content == null ? "" : self.content) != ""
       error_message = "Consumed product ${each.value.domain}/${each.value.product} is not published yet."
     }
   }

@@ -21,13 +21,16 @@ jobs:
           terraform_version: 1.16.3
       - name: terraform fmt
         run: terraform fmt -check -recursive
-      - name: terraform validate (every stack)
+      - name: terraform validate and test (every stack)
         run: |
           set -euo pipefail
           for stack in envs/*/core envs/*/contract; do
             echo "::group::$stack"
             terraform -chdir="$stack" init -backend=false -input=false
             terraform -chdir="$stack" validate
+            # Plan-level tests with mocked providers (tests/*.tftest.hcl); no cloud access.
+            env_name=$(basename "$(dirname "$stack")")
+            terraform -chdir="$stack" test -var-file="$env_name.tfvars"
             echo "::endgroup::"
           done
       - name: same resources in every environment (§6.1)

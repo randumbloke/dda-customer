@@ -37,7 +37,8 @@ resource "google_dataplex_entry" "table_contacts" {
   entry_type     = "projects/655216118709/locations/global/entryTypes/bigquery-table" # dataplex-types project number; ignored after import (VA-56)
 
   aspects {
-    aspect_key = "dataplex-types.global.contacts"
+    # The provider requires the project-number form of dataplex-types.global.contacts.
+    aspect_key = "655216118709.global.contacts"
     aspect {
       data = jsonencode({
         identities = concat(

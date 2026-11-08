@@ -22,7 +22,7 @@ data "google_storage_bucket_object_content" "published" {
 
   lifecycle {
     postcondition {
-      condition     = self.content != null && trimspace(coalesce(self.content, "")) != ""
+      condition     = trimspace(self.content == null ? "" : self.content) != ""
       error_message = "Published file gs://${var.tf_state_bucket}/${each.value} is missing or empty: apply the stack that writes it first (design §6.14, AT-26)."
     }
   }

@@ -21,7 +21,7 @@ data "google_storage_bucket_object_content" "domain_outputs" {
 
   lifecycle {
     postcondition {
-      condition     = self.content != null && trimspace(coalesce(self.content, "")) != ""
+      condition     = trimspace(self.content == null ? "" : self.content) != ""
       error_message = "outputs/dda-${var.business}/${var.env}/outputs.json is missing: apply the core stack first (design §6.13.3, AT-26)."
     }
   }
@@ -67,7 +67,8 @@ resource "google_dataplex_entry" "product" {
   entry_type = "projects/655216118709/locations/global/entryTypes/data-product"
 
   aspects {
-    aspect_key = "dataplex-types.global.refresh-cadence"
+    # The provider requires the project-number form of dataplex-types.global.refresh-cadence.
+    aspect_key = "655216118709.global.refresh-cadence"
     aspect {
       data = jsonencode(merge(
         {

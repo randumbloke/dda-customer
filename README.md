@@ -29,7 +29,7 @@ published JSON files, so `dda-accounts` uses the same `.tf` files unchanged.
 
 ```sh
 terraform fmt -check -recursive
-for s in envs/dev/core envs/dev/contract; do terraform -chdir=$s init -backend=false && terraform -chdir=$s validate; done
+for s in envs/dev/core envs/dev/contract; do terraform -chdir=$s init -backend=false && terraform -chdir=$s validate && terraform -chdir=$s test -var-file=dev.tfvars; done
 cd pipelines && uv sync && uv run pytest && uv run dda-pipeline validate --root ..
 ```
 
@@ -114,3 +114,10 @@ The pipeline jobs are off (`pipeline.enabled = false`) until the image is built
 - **Notification threshold for tables that serve no product** uses the domain's lowest product threshold.
 - **Lineage manifest** lists immediate sources (as the contract fixture does); it is environment-specific (dev project IDs).
 - **Artifact Registry `dda-pipelines`** is not in the contracts.
+- **System aspect keys and entry types use the `dataplex-types` project number** (`655216118709`):
+  provider 8.10.0 refuses `dataplex-types.global.contacts`, `dataplex-types.global.refresh-cadence`
+  and `projects/dataplex-types/...` entry types (found by the `terraform test` plans). The design and
+  AGENTS.md name them by project ID.
+- **Resources that need a table wait for it**: scans, assets and table contacts are declared only
+  for tables that exist at plan time (README "Apply order"), because the pipeline, not Terraform,
+  creates tables. The design does not say which creates tables.
