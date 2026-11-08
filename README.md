@@ -55,7 +55,7 @@ converges in two passes:
 4. `contract` apply; then run the pipeline again so the scans run after the load.
 
 The pipeline jobs are off (`pipeline.enabled = false`) until the image is built
-(`gcloud builds submit --config pipelines/cloudbuild.yaml .`) and its path is set in `dev.tfvars`.
+(RUNBOOK §1: `gcloud builds submit` as `tf-deployer` with `_TAG`; `dda-pipelines` tags are immutable) and its digest is set in `dev.tfvars`.
 
 ## Acceptance tests served (design §6.18)
 

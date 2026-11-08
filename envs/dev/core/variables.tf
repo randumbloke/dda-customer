@@ -77,4 +77,8 @@ variable "pipeline" {
     schedule = string
     timezone = string
   })
+  validation {
+    condition     = can(regex("@sha256:[0-9a-f]{64}$", var.pipeline.image))
+    error_message = "pipeline.image must be referenced by digest (<image>@sha256:...): dda-pipelines tags are immutable."
+  }
 }

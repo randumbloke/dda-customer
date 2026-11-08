@@ -29,7 +29,7 @@ export REGION=australia-southeast1 HUB=kcdda-dgov-hub-nonprod CORE=kcdda-core-dw
 | 4. `core` apply 2 | Same as step 1 | Six `dq-*` scans, the asset `customer-profile`, the table contacts on `customer_curated.contacts`. `pending_tables` is empty |
 | 5. `contract` apply | `cd envs/dev/contract && terraform init -backend-config=state.config && terraform apply -var-file=dev.tfvars` | Imports `@dataplex` entry; sets `refresh-cadence` |
 | 6. Pipeline run 2 | As step 3 | Each scan prints `SUCCEEDED` |
-| 7. Pipeline image (once) | `gcloud builds submit --config pipelines/cloudbuild.yaml --project pltfrm-ngnrng .`. Then set `pipeline.image` (by digest) and `pipeline.enabled = true` in `dev.tfvars` and merge | Jobs `customer-ingest`, `customer-build` and two scheduler jobs |
+| 7. Pipeline image (once) | `gcloud builds submit --project pltfrm-ngnrng --config pipelines/cloudbuild.yaml --service-account=projects/pltfrm-ngnrng/serviceAccounts/tf-deployer@pltfrm-ngnrng.iam.gserviceaccount.com --substitutions=_BUSINESS=customer,_TAG=$(git rev-parse --short HEAD) .` (tags are immutable: one `_TAG` per build). Then set `pipeline.image` to the printed `PIPELINE_IMAGE=...@sha256:...` and `pipeline.enabled = true` in `dev.tfvars` and merge | Jobs `customer-ingest`, `customer-build` and two scheduler jobs |
 
 If step 1 fails on a missing published file, apply the upstream stack first (that is AT-26).
 

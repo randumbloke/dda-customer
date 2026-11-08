@@ -170,7 +170,7 @@ run "pipeline_enabled" {
   variables {
     pipeline = {
       enabled  = true
-      image    = "australia-southeast1-docker.pkg.dev/pltfrm-ngnrng/dda-pipelines/x:1"
+      image    = "australia-southeast1-docker.pkg.dev/pltfrm-ngnrng/dda-pipelines/x@sha256:1111111111111111111111111111111111111111111111111111111111111111"
       schedule = "0 5 * * *"
       timezone = "Australia/Sydney"
     }
