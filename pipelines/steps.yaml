@@ -1,0 +1,37 @@
+# Pipeline steps (P6-39), run in order by `dda-pipeline run --stage <stage>`.
+#   ingest: Cloud Run job <business>-ingest in the core data project, as <business>-ingest-<env>.
+#   build:  Cloud Run job <business>-build in the analytics project, as <business>-analytics-<env>.
+# SQL files are string.Template files: ${core_project}, ${analytics_project}, ${landing_bucket},
+# ${business}, ${env}, ${domain} and ${consumed_<key>} (pipelines/config.yaml "consumes").
+# Every BigQuery job carries the label dda-domain=<domain> (design §1.6).
+steps:
+  - name: load-contacts
+    stage: ingest
+    sql: sql/10_load_contacts.sql
+  - name: load-segments
+    stage: ingest
+    sql: sql/11_load_segments.sql
+  - name: load-postcodes
+    stage: ingest
+    sql: sql/12_load_postcodes.sql
+  - name: curate-contacts
+    stage: ingest
+    sql: sql/20_curate_contacts.sql
+  - name: contacts-by-region
+    stage: ingest
+    sql: sql/21_contacts_by_region.sql
+  - name: build-customer-profile
+    stage: build
+    sql: sql/30_customer_profile.sql
+
+# Acceptance-test fixtures, run on demand: `dda-pipeline fixtures --at <id>` (README).
+fixtures:
+  at14:
+    description: AT-14, a sensitive table in customer_curated with no scan specification.
+    sql: sql/fixtures/at14_unscanned.sql
+  at18:
+    description: AT-18, a sensitive table created today with no lineage (assert within 48 hours).
+    sql: sql/fixtures/at18_no_lineage.sql
+  at19:
+    description: AT-19, a sensitive table with no lineage (assert after 48 hours).
+    sql: sql/fixtures/at19_no_lineage.sql

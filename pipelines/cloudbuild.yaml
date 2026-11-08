@@ -1,0 +1,27 @@
+# Builds and pushes the pipeline image (P6-39). Run from the repository root (the tests read
+# datasets.yaml and schemas/):
+#   gcloud builds submit --config pipelines/cloudbuild.yaml --substitutions=_BUSINESS=customer .
+# The resulting digest goes into envs/<env>/core/<env>.tfvars (pipeline.image), which deploys
+# the Cloud Run jobs. VERIFY IN BUILD (estate): the dda-pipelines Artifact Registry repository is
+# not in the phase 1 contracts (only dda-ci and dda-control-plane are); see README.
+substitutions:
+  _BUSINESS: customer
+  _REGION: australia-southeast1
+  _REPOSITORY: dda-pipelines
+options:
+  logging: CLOUD_LOGGING_ONLY
+steps:
+  - id: test
+    name: ghcr.io/astral-sh/uv:0.12.16-python3.13-bookworm-slim
+    dir: pipelines
+    entrypoint: sh
+    args: ["-c", "uv sync --frozen && uv run pytest -q"]
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_BUSINESS}-pipeline:${SHORT_SHA}
+      - pipelines
+images:
+  - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_BUSINESS}-pipeline:${SHORT_SHA}

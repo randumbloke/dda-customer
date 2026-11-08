@@ -1,0 +1,69 @@
+# ci-checks (design §6.3) for a domain repository: Terraform format and validation of every
+# stack, the forbidden-resource check (§6.15.3), schema validation of the declarative files and
+# the pipeline tests.
+name: ci-checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.16.3
+      - name: terraform fmt
+        run: terraform fmt -check -recursive
+      - name: terraform validate (every stack)
+        run: |
+          set -euo pipefail
+          for stack in envs/*/core envs/*/contract; do
+            echo "::group::$stack"
+            terraform -chdir="$stack" init -backend=false -input=false
+            terraform -chdir="$stack" validate
+            echo "::endgroup::"
+          done
+      - name: same resources in every environment (§6.1)
+        run: |
+          set -euo pipefail
+          for stack in core contract; do
+            ref=$(ls -d envs/*/"$stack" | head -1)
+            for dir in envs/*/"$stack"; do
+              diff <(cd "$ref" && ls *.tf | grep -v -e '^backend.tf$' | sort | xargs cat) \
+                   <(cd "$dir" && ls *.tf | grep -v -e '^backend.tf$' | sort | xargs cat) \
+                || { echo "$dir differs from $ref"; exit 1; }
+            done
+          done
+      - name: forbidden resources (§6.15.3)
+        run: |
+          set -euo pipefail
+          if grep -rnE '_iam_policy"|_iam_binding"|google_bigquery_dataset_iam_|google_bigquery_table_iam_|google_cloud_identity_group_membership|local-exec|data "external"|data "http"' --include='*.tf' envs; then
+            echo "Forbidden resource found (design §6.15.3)"; exit 1
+          fi
+          # Every dataset has an explicit access list and ignore_changes = [access].
+          for f in $(grep -rl 'resource "google_bigquery_dataset" ' --include='*.tf' envs); do
+            grep -q 'ignore_changes = \[access\]' "$f" || { echo "$f: dataset without ignore_changes = [access]"; exit 1; }
+          done
+
+  python:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: pipelines
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: 0.12.16
+      - run: uv sync --frozen
+      - name: schema validation of declarative files
+        run: uv run dda-pipeline validate --root ..
+      - name: pytest
+        run: uv run pytest -q

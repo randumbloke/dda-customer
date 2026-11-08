@@ -1,0 +1,32 @@
+[project]
+name = "dda-pipeline"
+version = "0.1.0"
+description = "Reference domain pipeline (design §3.1, P6-39): synthetic data, BigQuery SQL steps, DQ scan runs"
+readme = "README.md"
+authors = [
+    { name = "MikeY", email = "mikegyoung@google.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "faker>=40.44.0",
+    "google-cloud-bigquery>=3.47.0",
+    "google-cloud-dataplex>=2.21.0",
+    "google-cloud-storage>=3.17.1",
+    "pyyaml>=6.0.3",
+]
+
+[project.scripts]
+dda-pipeline = "dda_pipeline.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.12.16,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "jsonschema>=4.26.0",
+    "pytest>=9.2.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
