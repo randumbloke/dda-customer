@@ -1,0 +1,8 @@
+# DataQualitySpec for the hand-made AT-14 scan: catalog publishing on, no postScanActions
+# (no BigQuery export). Used with gcloud dataplex datascans create data-quality (RUNBOOK.md).
+catalogPublishingEnabled: true
+rules:
+  - column: customer_id
+    dimension: COMPLETENESS
+    nonNullExpectation: {}
+    threshold: 1.0

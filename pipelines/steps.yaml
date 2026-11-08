@@ -29,9 +29,15 @@ fixtures:
   at14:
     description: AT-14, a sensitive table in customer_curated with no scan specification.
     sql: sql/fixtures/at14_unscanned.sql
+  at14-noexport:
+    description: AT-14, a sensitive table for the hand-made scan that publishes but does not export.
+    sql: sql/fixtures/at14_noexport.sql
   at18:
     description: AT-18, a sensitive table created today with no lineage (assert within 48 hours).
     sql: sql/fixtures/at18_no_lineage.sql
+  at18-cycle:
+    description: AT-18, a table with lineage but no resolved source (a lineage cycle).
+    sql: sql/fixtures/at18_cycle.sql
   at19:
     description: AT-19, a sensitive table with no lineage (assert after 48 hours).
     sql: sql/fixtures/at19_no_lineage.sql

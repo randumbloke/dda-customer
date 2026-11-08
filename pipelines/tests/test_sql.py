@@ -104,7 +104,7 @@ def test_fixtures(home, runtime):
     steps = load_steps(home)
     for name in steps.fixtures:
         sql = run_fixture(runtime, steps, name, home, bq_client=object(), sql_runner=lambda *a: None)
-        assert f"{runtime.business}_curated.{name}" in sql
+        assert f"{runtime.business}_curated.{name.replace('-', '_')}" in sql
 
 
 def test_runtime_from_env():

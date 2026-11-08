@@ -10,43 +10,7 @@ mock_provider "google" {
   override_data {
     target = data.google_storage_bucket_object_content.published
     values = {
-      content = <<-JSON
-        {
-          "organization_id": "1059663003036", "customer_id": "C00000000", "group_domain": "mikegyoung.joonix.net",
-          "single_deployer": true, "cicd_project_id": "pltfrm-ngnrng",
-          "deployer_service_accounts": {"apply": "tf-deployer@pltfrm-ngnrng.iam.gserviceaccount.com", "plan": "tf-deployer-plan@pltfrm-ngnrng.iam.gserviceaccount.com"},
-          "tier": "nonprod", "hub_project_id": "kcdda-dgov-hub-nonprod", "hub_project_number": "111",
-          "hub_state_bucket": "kcdda-dgov-hub-nonprod-dda-state",
-          "env": "dev",
-          "projects": {
-            "core": {"project_id": "kcdda-core-dwh-dev", "number": "222", "service_agents": {"dataplex": "service-222@gcp-sa-dataplex.iam.gserviceaccount.com"}},
-            "customer": {"project_id": "kcdda-customer-analytics-dev", "number": "333", "service_agents": {"dataplex": "service-333@gcp-sa-dataplex.iam.gserviceaccount.com"}},
-            "accounts": {"project_id": "kcdda-accounts-analytics-dev", "number": "444", "service_agents": {"dataplex": "service-444@gcp-sa-dataplex.iam.gserviceaccount.com"}}
-          },
-          "landing_buckets": {"customer": "kcdda-core-dwh-dev-customer-landing", "accounts": "kcdda-core-dwh-dev-accounts-landing"},
-          "domain_service_accounts": {
-            "customer": {"ingest": "customer-ingest-dev@kcdda-core-dwh-dev.iam.gserviceaccount.com", "analytics": "customer-analytics-dev@kcdda-customer-analytics-dev.iam.gserviceaccount.com"},
-            "accounts": {"ingest": "accounts-ingest-dev@kcdda-core-dwh-dev.iam.gserviceaccount.com", "analytics": "accounts-analytics-dev@kcdda-accounts-analytics-dev.iam.gserviceaccount.com"}
-          },
-          "domains": {
-            "customer-dev": {"name": "projects/kcdda-dgov-hub-nonprod/locations/australia-southeast1/dataDomains/customer-dev", "policy_member": "principal://dataplex.googleapis.com/customer-dev",
-              "subdomains": {
-                "raw": {"name": "projects/kcdda-dgov-hub-nonprod/locations/australia-southeast1/dataDomains/customer-dev-raw", "policy_member": "principal://x/customer-dev-raw"},
-                "staging": {"name": "projects/kcdda-dgov-hub-nonprod/locations/australia-southeast1/dataDomains/customer-dev-staging", "policy_member": "principal://x/customer-dev-staging"},
-                "curated": {"name": "projects/kcdda-dgov-hub-nonprod/locations/australia-southeast1/dataDomains/customer-dev-curated", "policy_member": "principal://x/customer-dev-curated"},
-                "analytics": {"name": "projects/kcdda-dgov-hub-nonprod/locations/australia-southeast1/dataDomains/customer-dev-analytics", "policy_member": "principal://x/customer-dev-analytics"}}},
-            "accounts-dev": {"name": "projects/kcdda-dgov-hub-nonprod/locations/australia-southeast1/dataDomains/accounts-dev", "policy_member": "principal://dataplex.googleapis.com/accounts-dev",
-              "subdomains": {
-                "raw": {"name": "projects/kcdda-dgov-hub-nonprod/locations/australia-southeast1/dataDomains/accounts-dev-raw", "policy_member": "principal://x/accounts-dev-raw"},
-                "staging": {"name": "projects/kcdda-dgov-hub-nonprod/locations/australia-southeast1/dataDomains/accounts-dev-staging", "policy_member": "principal://x/accounts-dev-staging"},
-                "curated": {"name": "projects/kcdda-dgov-hub-nonprod/locations/australia-southeast1/dataDomains/accounts-dev-curated", "policy_member": "principal://x/accounts-dev-curated"},
-                "analytics": {"name": "projects/kcdda-dgov-hub-nonprod/locations/australia-southeast1/dataDomains/accounts-dev-analytics", "policy_member": "principal://x/accounts-dev-analytics"}}}
-          },
-          "hub_datasets": {"australia-southeast1": {"dq_results": "dq_results", "cdmc_findings": "cdmc_findings"}},
-          "cdmc_report_dataset": "cdmc_report", "discovery_configs": {}, "service_urls": {},
-          "products": {}
-        }
-      JSON
+      content = file("tests/published.json")
     }
   }
 
@@ -281,4 +245,18 @@ run "published_files_match_contracts" {
     condition     = length(jsondecode(google_storage_bucket_object.bindings.content).bindings) == length(local.datasets) + length(local.products)
     error_message = "one binding per dataset and product (AT-05)"
   }
+}
+
+# A dataset in a project without a discovery configuration fails the plan (design §6.14.1).
+run "no_discovery_config_fails_plan" {
+  command = plan
+
+  override_data {
+    target = data.google_storage_bucket_object_content.published
+    values = {
+      content = file("tests/published_no_discovery.json")
+    }
+  }
+
+  expect_failures = [terraform_data.declarative_checks]
 }

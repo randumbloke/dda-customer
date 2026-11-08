@@ -25,6 +25,8 @@ pipelines/                    P6-39 reference pipeline (Python, uv): generator, 
 The `.tf` files are generic: every value comes from `<env>.tfvars`, the declarative files and the
 published JSON files, so `dda-accounts` uses the same `.tf` files unchanged.
 
+Step-by-step deployment and acceptance-test commands: [RUNBOOK.md](RUNBOOK.md).
+
 ## Checks
 
 ```sh
@@ -66,11 +68,11 @@ The pipeline jobs are off (`pipeline.enabled = false`) until the image is built
 | AT-08 | `main.products.tf`: product with owners, approvers, access group, asset; published definition |
 | AT-09 | `envs/dev/contract`: `refresh-cadence` from `contract.refresh_cadence`; the contract aspect is not written here |
 | AT-11, AT-12, AT-13 | Metadata changes from every apply and pipeline run (tables, aspects, scans) feed `feed-evaluator`; twenty table updates: re-run `customer-ingest`; AT-13 uses a dataset with no event |
-| AT-14 | `dq/` (six specs, export on); fixture `at14` (sensitive table with no spec). The scan that publishes but does not export is created by hand during the test, because this repository always exports |
+| AT-14 | `dq/` (six specs, export on); fixture `at14` (sensitive table with no spec); fixture `at14-noexport` plus the hand-made scan `sql/fixtures/at14_noexport_scan.yaml` (publishes, no export), because this repository always exports |
 | AT-15 | `customer_profile` critical rules; `generate --inject-failures` makes them fail |
 | AT-16 | `contract.refresh_cadence` (daily, 120 min); skip a pipeline run |
 | AT-17 | `notification_report` to the product owners group, `score_threshold` 95 |
-| AT-18 | Fixture `at18` (no source table, created that day) |
+| AT-18 | Fixtures `at18` (no lineage) and `at18-cycle` (lineage with no resolved source), created that day |
 | AT-19 | Fixture `at19` (sensitive, no lineage; assert after 48 hours) |
 | AT-20 | `pipelines/lineage/manifest.json`: **deliberate undeclared source** — `customer_curated.contacts_by_region` reads `customer_raw.postcodes` (step `contacts-by-region`), which its manifest entry omits → `MISMATCH`. `customer_profile` declares `customer_curated.contact_preferences`, which it never reads → not a mismatch |
 | AT-21 | `customer_profile` (all run-time sources declared) → `VERIFIED`; `customer_raw.postcodes`, loaded from Cloud Storage with no manifest entry → `VERIFIED` on run-time evidence |

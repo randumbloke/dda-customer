@@ -151,6 +151,10 @@ resource "terraform_data" "declarative_checks" {
       error_message = "table_contacts must name tables in datasets declared in datasets.yaml."
     }
     precondition {
+      condition     = alltrue([for d in local.datasets : contains(keys(local.governance_env.discovery_configs), d.project)])
+      error_message = "Every dataset's project needs a discovery configuration in outputs/cdmc-governance/<env>/outputs.json; apply cdmc-governance first (design §6.6.5, §6.14.1)."
+    }
+    precondition {
       condition     = alltrue([for id, p in local.products : length(try(p.approvers, [])) <= 10])
       error_message = "At most 10 approvers per product (design §3.2, G5)."
     }
