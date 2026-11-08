@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "domain": "customer-dev",
+  "generated_by": "hand (P6-39)",
+  "targets": {
+    "kcdda-core-dwh-dev.customer_raw.contacts": {
+      "sources": [],
+      "landing_paths": ["gs://kcdda-core-dwh-dev-customer-landing/contacts/"]
+    },
+    "kcdda-core-dwh-dev.customer_raw.segments": {
+      "sources": [],
+      "landing_paths": ["gs://kcdda-core-dwh-dev-customer-landing/segments/"]
+    },
+    "kcdda-core-dwh-dev.customer_curated.contacts": {
+      "sources": [
+        "kcdda-core-dwh-dev.customer_raw.contacts",
+        "kcdda-core-dwh-dev.customer_raw.segments"
+      ]
+    },
+    "kcdda-core-dwh-dev.customer_curated.contacts_by_region": {
+      "sources": ["kcdda-core-dwh-dev.customer_curated.contacts"]
+    },
+    "kcdda-customer-analytics-dev.customer_analytics.customer_profile": {
+      "sources": [
+        "kcdda-core-dwh-dev.customer_curated.contacts",
+        "kcdda-core-dwh-dev.customer_curated.contact_preferences"
+      ]
+    }
+  }
+}

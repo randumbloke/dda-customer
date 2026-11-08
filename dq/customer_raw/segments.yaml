@@ -1,0 +1,13 @@
+# Data quality scan specification (design §3.6). Schema: schemas/dq_spec.schema.json.
+table: customer_raw.segments
+trigger: on_demand
+rules:
+  - name: segment-code-not-null
+    dimension: COMPLETENESS
+    template: non_null_expectation
+    column: segment_code
+    critical: true
+  - name: segment-code-unique
+    dimension: UNIQUENESS
+    template: uniqueness_expectation
+    column: segment_code

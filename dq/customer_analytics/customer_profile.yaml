@@ -1,0 +1,27 @@
+# Data quality scan specification (design §3.6). Schema: schemas/dq_spec.schema.json.
+# The asset of Customer Profile; its results feed the C12 product rollup (AT-15, AT-17).
+table: customer_analytics.customer_profile
+trigger: on_demand
+rules:
+  - name: customer-id-not-null
+    dimension: COMPLETENESS
+    template: non_null_expectation
+    column: customer_id
+    critical: true
+  - name: customer-id-unique
+    dimension: UNIQUENESS
+    template: uniqueness_expectation
+    column: customer_id
+    critical: true
+  - name: email-valid
+    dimension: VALIDITY
+    template: regex_expectation
+    column: email
+    params: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
+    threshold: 0.99
+  - name: age-band-valid
+    dimension: VALIDITY
+    template: set_expectation
+    column: age_band
+    params: {values: ["18-29", "30-44", "45-59", "60+"]}
+    threshold: 0.99

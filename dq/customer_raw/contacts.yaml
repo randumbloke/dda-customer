@@ -1,0 +1,15 @@
+# Data quality scan specification (design §3.6). Schema: schemas/dq_spec.schema.json.
+# Raw tables in a sensitive dataset are sensitive, so they need a specification too.
+table: customer_raw.contacts
+trigger: on_demand
+rules:
+  - name: customer-id-not-null
+    dimension: COMPLETENESS
+    template: non_null_expectation
+    column: customer_id
+    critical: true
+  - name: row-count-positive
+    dimension: VOLUME
+    template: table_condition_expectation
+    params: {sql_expression: "COUNT(*) > 0"}
+    critical: true

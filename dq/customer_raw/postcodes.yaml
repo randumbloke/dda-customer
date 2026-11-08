@@ -1,0 +1,16 @@
+# Data quality scan specification (design §3.6). Schema: schemas/dq_spec.schema.json.
+# customer_raw.postcodes is loaded straight from Cloud Storage and has no lineage manifest entry
+# (the AT-21 "loaded directly from Cloud Storage" table).
+table: customer_raw.postcodes
+trigger: on_demand
+rules:
+  - name: postcode-format
+    dimension: VALIDITY
+    template: regex_expectation
+    column: postcode
+    params: {pattern: '^[0-9]{4}$'}
+    critical: true
+  - name: region-not-null
+    dimension: COMPLETENESS
+    template: non_null_expectation
+    column: region

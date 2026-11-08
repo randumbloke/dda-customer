@@ -1,0 +1,15 @@
+# Data quality scan specification (design §3.6). Schema: schemas/dq_spec.schema.json.
+# The AT-20 MISMATCH table: it reads customer_raw.postcodes, which its manifest entry omits.
+table: customer_curated.contacts_by_region
+trigger: on_demand
+rules:
+  - name: region-not-null
+    dimension: COMPLETENESS
+    template: non_null_expectation
+    column: region
+    critical: true
+  - name: customer-count-positive
+    dimension: VALIDITY
+    template: range_expectation
+    column: customer_count
+    params: {min_value: "1"}

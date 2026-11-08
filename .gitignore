@@ -1,0 +1,10 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+pipelines/out/

@@ -1,0 +1,27 @@
+# Data quality scan specification (design §3.6). Schema: schemas/dq_spec.schema.json.
+table: customer_curated.contacts
+trigger: on_demand
+incremental_field: load_ts
+rules:
+  - name: customer-id-not-null
+    dimension: COMPLETENESS
+    template: non_null_expectation
+    column: customer_id
+    critical: true
+  - name: customer-id-unique
+    dimension: UNIQUENESS
+    template: uniqueness_expectation
+    column: customer_id
+    critical: true
+  - name: email-valid
+    dimension: VALIDITY
+    template: regex_expectation
+    column: email
+    params: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
+    threshold: 0.99
+  - name: state-valid
+    dimension: VALIDITY
+    template: set_expectation
+    column: state
+    params: {values: [ACT, NSW, NT, QLD, SA, TAS, VIC, WA]}
+    threshold: 0.99

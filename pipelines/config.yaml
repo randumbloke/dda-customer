@@ -1,0 +1,4 @@
+# Pipeline configuration read by the core stack (main.pipeline.tf).
+# consumes: products of other domains that this pipeline reads, through their published assets
+# (the provisioning point). Key = name used in SQL templates as ${consumed_<key>}.
+consumes: {}

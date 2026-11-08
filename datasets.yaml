@@ -1,0 +1,19 @@
+# Domain datasets (design §3.3). Schema: schemas/datasets.schema.json.
+# {env} is replaced by the environment before use (§3.1).
+datasets:
+  customer_raw:
+    stage: raw
+    sensitivity: sensitive
+    description: Customer contact and segment files loaded as landed (P6-39).
+  customer_curated:
+    stage: curated
+    sensitivity: sensitive
+    description: Cleaned, de-duplicated customer contacts.
+  customer_analytics:
+    stage: analytics
+    sensitivity: sensitive
+    description: Customer data product tables (Customer Profile).
+table_contacts:
+  customer_curated.contacts:
+    owner: dda-customer-{env}-owners@mikegyoung.joonix.net
+    steward: dda-customer-{env}-stewards@mikegyoung.joonix.net

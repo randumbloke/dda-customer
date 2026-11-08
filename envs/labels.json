@@ -1,0 +1,13 @@
+{
+  "_comment": "Labels for every environment (design §1.6, P1-7). {business} and {env} are replaced by the stack. Read by the domain stacks directly; label_gen in dda-platform reads the same shape.",
+  "datasets": {
+    "dda-domain": "{business}-{env}"
+  },
+  "scans": {
+    "dda-domain": "{business}-{env}",
+    "dda-env": "{env}"
+  },
+  "jobs": {
+    "dda-domain": "{business}-{env}"
+  }
+}
