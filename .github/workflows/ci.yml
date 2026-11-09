@@ -1,10 +1,10 @@
-# ci-checks (design §6.3) for a domain repository: Terraform format and validation of every
-# stack, the forbidden-resource check (§6.15.3), schema validation of the declarative files and
-# the pipeline tests.
-name: ci-checks
+# ci-checks (design §6.3) for a domain repository: one aggregate job named ci-checks so the
+# GitHub ruleset and merge gate check 3 see the required check run.
+name: ci
 
 on:
   pull_request:
+    branches: [main]
   push:
     branches: [main]
 
@@ -12,13 +12,16 @@ permissions:
   contents: read
 
 jobs:
-  terraform:
-    runs-on: ubuntu-latest
+  ci-checks:
+    name: ci-checks
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
           terraform_version: 1.17.1
+          terraform_wrapper: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
       - name: terraform fmt
         run: terraform fmt -check -recursive
       - name: terraform validate and test (every stack)
@@ -28,7 +31,6 @@ jobs:
             echo "::group::$stack"
             terraform -chdir="$stack" init -backend=false -input=false
             terraform -chdir="$stack" validate
-            # Plan-level tests with mocked providers (tests/*.tftest.hcl); no cloud access.
             env_name=$(basename "$(dirname "$stack")")
             terraform -chdir="$stack" test -var-file="$env_name.tfvars"
             echo "::endgroup::"
@@ -47,26 +49,15 @@ jobs:
       - name: forbidden resources (§6.15.3)
         run: |
           set -euo pipefail
-          if grep -rnE '_iam_policy"|_iam_binding"|google_bigquery_dataset_iam_|google_bigquery_table_iam_|google_cloud_identity_group_membership|local-exec|data "external"|data "http"' --include='*.tf' envs; then
+          if grep -rnE '^\s*(resource\s+"(google_[a-z0-9_]*_iam_policy|google_[a-z0-9_]*_iam_binding|google_bigquery_dataset_iam_[a-z]+|google_bigquery_table_iam_[a-z]+|google_cloud_identity_group_membership)"|provisioner\s+"local-exec"|data\s+"(external|http)")' --include='*.tf' --exclude-dir=.terraform envs; then
             echo "Forbidden resource found (design §6.15.3)"; exit 1
           fi
-          # Every dataset has an explicit access list and ignore_changes = [access].
-          for f in $(grep -rl 'resource "google_bigquery_dataset" ' --include='*.tf' envs); do
+          for f in $(grep -rl 'resource "google_bigquery_dataset" ' --include='*.tf' --exclude-dir=.terraform envs); do
             grep -q 'ignore_changes = \[access\]' "$f" || { echo "$f: dataset without ignore_changes = [access]"; exit 1; }
           done
-
-  python:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
+      - name: schema validation and pipeline tests
         working-directory: pipelines
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
-        with:
-          version: 0.12.16
-      - run: uv sync --frozen
-      - name: schema validation of declarative files
-        run: uv run dda-pipeline validate --root ..
-      - name: pytest
-        run: uv run pytest -q
+        run: |
+          uv sync --frozen
+          uv run dda-pipeline validate --root ..
+          uv run pytest -q
