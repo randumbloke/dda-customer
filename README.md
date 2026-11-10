@@ -18,7 +18,7 @@ envs/dev/core/                datasets, access entries, bindings, table contacts
                               assets, access groups, published files, pipeline jobs (§6.13.2)
 envs/dev/contract/            refresh-cadence on each published product's @dataplex entry (§3.2.1)
 pipelines/                    P6-39 reference pipeline (Python, uv): generator, SQL steps, Cloud Run
-                              job entrypoint, lineage manifest, Dockerfile, cloudbuild.yaml
+                              job entrypoint, lineage manifest, Dockerfile
 .github/workflows/ci.yml      ci-checks
 ```
 
@@ -96,7 +96,7 @@ The pipeline jobs are off (`pipeline.enabled = false`) until the image is built
 | VA-64 (VA-22) | `pipelines/sql/10_load_contacts.sql` | Lineage for `LOAD DATA` from Cloud Storage |
 | VA-87 | `main.bindings.tf` | `ddaDomainBinder` scope |
 | VA-94 | `main.datasets.tf` | Dataset access pattern |
-| estate | `dev.tfvars`, `main.pipeline.tf`, `pipelines/cloudbuild.yaml` | Pipeline image repository `dda-pipelines`; Run and Scheduler APIs and `serviceAccountUser` on the runtime accounts |
+| estate | `dev.tfvars`, `main.pipeline.tf` | Pipeline image repository `dda-pipelines`; Run and Scheduler APIs and `serviceAccountUser` on the runtime accounts |
 
 ## Contract differences
 
