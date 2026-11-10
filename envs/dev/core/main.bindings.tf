@@ -17,9 +17,9 @@ locals {
   dataset_resources = {
     for name, d in local.datasets : name => "//bigquery.googleapis.com/projects/${d.project}/datasets/${google_bigquery_dataset.this[name].dataset_id}"
   }
-  # VERIFY IN BUILD (VA-15): the full resource name form the bindings API accepts for a product.
+  # The bindings API accepts a product only by project number (VA-15, OD-9); datasets use the ID.
   product_resources = {
-    for id, p in local.products : id => "//dataplex.googleapis.com/projects/${local.analytics_project}/locations/${var.region}/dataProducts/${google_dataplex_data_product.this[id].data_product_id}"
+    for id, p in local.products : id => "//dataplex.googleapis.com/projects/${local.analytics_project_number}/locations/${var.region}/dataProducts/${google_dataplex_data_product.this[id].data_product_id}"
   }
 
   binding_sets = {
