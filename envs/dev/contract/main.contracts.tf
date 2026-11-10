@@ -40,7 +40,7 @@ locals {
   contracts = {
     for id, p in local.outputs.products : id => {
       entry_name = p.dataplex_entry
-      project    = p.project_id
+      project    = regex("^projects/([^/]+)/", p.dataplex_entry)[0]
       location   = p.location
       # projects/<p>/locations/<l>/entryGroups/@dataplex/entries/<entry_id>
       entry_id = regex("^projects/[^/]+/locations/[^/]+/entryGroups/[^/]+/entries/(.+)$", p.dataplex_entry)[0]
