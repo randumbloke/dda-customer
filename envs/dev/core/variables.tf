@@ -36,8 +36,15 @@ variable "tf_state_bucket" {
 }
 
 variable "billing_project" {
-  description = "Quota project for API calls."
+  description = "Quota project for API calls when running with user credentials."
   type        = string
+  default     = ""
+}
+
+variable "manage_access_groups" {
+  description = "Create product access groups with google_cloud_identity_group; false when pre-created by the groups administrator (§2.4.6, OD-7)."
+  type        = bool
+  default     = true
 }
 
 variable "repo_root" {

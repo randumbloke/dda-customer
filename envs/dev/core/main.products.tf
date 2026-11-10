@@ -51,7 +51,7 @@ locals {
 # (design §6.15.1), so a member added by approval survives an apply (AT-07).
 # Requires tf-<business>-<tier> (tf-deployer) to be able to create dda-dp-* groups (§2.4.6).
 resource "google_cloud_identity_group" "access" {
-  for_each = local.access_groups
+  for_each = var.manage_access_groups ? local.access_groups : {}
 
   parent       = "customers/${local.estate.customer_id}"
   display_name = "${local.products[each.value.product].display_name} ${each.value.display_name} (${var.env})"
