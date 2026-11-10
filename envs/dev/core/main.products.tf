@@ -131,9 +131,30 @@ resource "google_dataplex_data_product_data_asset" "this" {
 }
 
 # Data product IAM (design §6.15.1: google_dataplex_data_product_iam_member, domain core stack).
-# The only product grant the design names for a domain stack is ddaDomainDelegate to the analytics
-# subdomain's policy_member, which the binding module applies (main.bindings.tf). Owners and
-# approvers act through owner_emails and access_approval_config, so no other member is declared.
+# ddaDomainDelegate to the analytics subdomain's policy_member is applied by the binding module
+# (main.bindings.tf). The owners group, which is also the product's approver, holds the custom role
+# ddaProductApprover on the product (design §1.5.1; VA-43). owner_emails and
+# access_approval_config only name who is notified; they grant no IAM (MB-23).
+data "google_project" "analytics" {
+  project_id = local.analytics_project
+}
+
+resource "google_dataplex_data_product_iam_member" "approver" {
+  for_each = local.products
+
+  project         = local.analytics_project
+  location        = var.region
+  data_product_id = google_dataplex_data_product.this[each.key].data_product_id
+  role            = "organizations/${data.google_project.analytics.org_id}/roles/ddaProductApprover"
+  member          = "group:${each.value.owners_group}"
+
+  lifecycle {
+    precondition {
+      condition     = data.google_project.analytics.org_id != ""
+      error_message = "The analytics project reports no organisation ID, needed for ddaProductApprover."
+    }
+  }
+}
 
 # Published product definitions for the evaluator's contract writer (design §3.2.1;
 # schemas/published_product.schema.json). One writer: this domain's pipeline.
