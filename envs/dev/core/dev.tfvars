@@ -24,7 +24,7 @@ components = {
 
 # P6-39 reference pipeline: Cloud Run jobs and the daily scheduler. Off until the image exists.
 # Referenced by digest: dda-pipelines has immutable tags. VERIFY IN BUILD (estate): replace the
-# placeholder digest with the PIPELINE_IMAGE line printed by pipelines/cloudbuild.yaml.
+# placeholder digest with the digest in outputs/dda-customer/images.json (dda-customer-image trigger, P6-43).
 pipeline = {
   enabled  = false
   image    = "australia-southeast1-docker.pkg.dev/pltfrm-ngnrng/dda-pipelines/customer-pipeline@sha256:0000000000000000000000000000000000000000000000000000000000000000"

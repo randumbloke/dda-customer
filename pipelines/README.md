@@ -10,7 +10,7 @@ reference implementation used in phase 1.
 | Runner | `src/dda_pipeline/runner.py` | Runs one stage, then starts each of the stage's on-demand data quality scans and waits for it |
 | Fixtures | `sql/fixtures/` | Acceptance-test tables (AT-14, AT-18, AT-19), run on demand |
 | Lineage | `lineage/manifest.json` | Hand-written design-time lineage manifest (design §5.4.1), published by the core stack |
-| Image | `Dockerfile`, `cloudbuild.yaml` | One image for both Cloud Run jobs |
+| Image | `Dockerfile` | One image for both Cloud Run jobs, built by the bootstrap trigger `dda-<business>-image` at each merge that changes `pipelines/` (P6-43); no build file lives here |
 
 ## Stages and identities
 
